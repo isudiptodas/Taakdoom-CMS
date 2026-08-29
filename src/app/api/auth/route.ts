@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
     else if (query === 'login') {
 
-        const { email, password } = body;
+        const { email, password, option } = body;
         try {
 
             const found = await User.findOne({ email });
@@ -59,6 +59,20 @@ export async function POST(req: NextRequest) {
                 }, { status: 404 });
             }
 
+            if(found.role === 'user' && !found.isVerified){
+                return NextResponse.json({
+                    success: false,
+                    message: `Account not approved yet`,
+                }, { status: 401 });
+            }
+
+            if(found.role !== option){
+                return NextResponse.json({
+                    success: false,
+                    message: `Authorization error`,
+                }, { status: 401 });
+            }
+
             const matched = await bcrypt.compare(password, found.password);
 
             if (!matched) {
@@ -68,18 +82,21 @@ export async function POST(req: NextRequest) {
                 }, { status: 403 });
             }
 
-            const token = jwt.sign({ id: found._id, email: found.email }, process.env.JWT_SECRET as string, { expiresIn: "1d" });
+            const token = jwt.sign({ id: found._id, email: found.email, role: option }, process.env.JWT_SECRET as string, { expiresIn: "1d" });
 
             const res = NextResponse.json({
                 success: true,
-                message: `User logged in`,
-            }, { status: 200 }).cookies.set("token", token, {
-                path: '/',
+                message: `Logged in`,
+                role: option === 'user' ? "user" : "admin"
+            }, { status: 200 });
+
+            res.cookies.set("token", token, {
+                path: "/",
                 httpOnly: true,
                 secure: false,
-                sameSite: 'lax',
+                sameSite: "lax",
                 maxAge: 60 * 60 * 24 * 7,
-            });
+            })
 
             return res;
         } catch (error) {

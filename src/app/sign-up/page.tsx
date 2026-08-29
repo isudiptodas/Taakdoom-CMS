@@ -29,6 +29,8 @@ function page() {
         return;
     }
 
+    setLoading(true);
+
     try{
         const res = await axios.post(`/api/auth?type=register`, {
             name, email, password
@@ -63,7 +65,7 @@ function page() {
           <input onChange={(e) => setEmail(e.target.value)} value={email} type="text" className={`w-full px-4 py-3 bg-gray-200 outline-none`} placeholder="Enter your email" />
           <input onChange={(e) => setPassword(e.target.value)} value={password} type="password" className={`w-full px-4 py-3 bg-gray-200 outline-none`} placeholder="Enter your password" />
           <input onChange={(e) => setConfirm(e.target.value)} value={confirm} type="password" className={`w-full px-4 py-3 bg-gray-200 outline-none`} placeholder="Confirm your password" />
-          <p onClick={createAccount} className={`w-full bg-linear-to-br from-zinc-950 to-[#9e0037] text-white font-semibold cursor-pointer active:opacity-80 duration-200 ease-in-out text-center py-3`}>{loading ? <span className={`flex justify-center items-center gap-5`}>Creating Account <Loader/></span> : ("Create Account")}</p>
+          <div onClick={createAccount} className={`w-full bg-linear-to-br from-zinc-950 to-[#9e0037] text-white font-semibold cursor-pointer active:opacity-80 duration-200 ease-in-out text-center py-3`}>{loading ? <div className={`flex justify-center items-center gap-5`}>Creating Account <Loader/></div> : ("Create Account")}</div>
         </div>
 
         <Link href='/' className={`font-bold text-pink-800 cursor-pointer mt-5`}>Go Back</Link>

@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+h1, p, span {
+    user-select: none;
+}
