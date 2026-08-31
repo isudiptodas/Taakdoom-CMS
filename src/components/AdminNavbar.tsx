@@ -1,5 +1,6 @@
 'use client'
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FiSidebar } from "react-icons/fi";
 import { VscClose } from "react-icons/vsc";
@@ -54,7 +55,7 @@ function AdminNavbar() {
 
                 <div className={`w-full flex flex-col justify-start items-center mt-10`}>
                     {navLinks.map((item, index) => {
-                        return <span key={index} className={`w-full text-start pl-6 text-white text-3xl mb-3 font-light`}>{item.name}</span>
+                        return <Link href={item.link} key={index} className={`w-full text-start pl-6 text-white text-3xl mb-3 font-light`}>{item.name}</Link>
                     })}
                 </div>
             </div>

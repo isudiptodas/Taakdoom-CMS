@@ -3,3 +3,12 @@
 h1, p, span {
     user-select: none;
 }
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}

@@ -3,7 +3,7 @@ import { User } from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from 'bcrypt';
 
-export async function POST(req: NextRequest) {
+export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { data } = body;
 
@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
 
         found.password = hashed;
         await found.save();
-        
 
         return NextResponse.json({
             success: true,

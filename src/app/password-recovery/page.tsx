@@ -73,7 +73,7 @@ function page() {
 
     const verifyOTP = () => {
         if (enteredOTP.some((item) => item === "")) {
-            toast.error("Banchod puro OTP enter kor");
+            toast.error("Please enter OTP");
             return;
         }
 
@@ -123,7 +123,7 @@ function page() {
                 {/* otp enter field */}
                 <div className={`w-[95%] ${verified ? "pointer-events-none opacity-50" : ""} ${emailSent ? "block" : "hidden"} md:w-[60%] xl:w-[40%] flex flex-col justify-center items-center mt-8 gap-3`}>
                     <p className={`w-full text-center text-black text-lg`}>An OTP has send on email</p>
-                    <span className={`w-full font-bold`}>{email}</span>
+                    <span className={`w-full font-bold text-center`}>{email}</span>
                     <div className={`w-full flex justify-center items-center gap-3 mt-2`}>
                         {enteredOTP.map((digit, index) => (
                             <input
@@ -143,12 +143,12 @@ function page() {
 
                 {/* new password field */}
                 <div className={`w-[95%] ${verified ? "block" : "hidden"} md:w-[60%] xl:w-[40%] flex flex-col justify-center items-center gap-4 mt-4 border-2 border-gray-400 px-3 py-4 relative`}>
-                    <span onClick={() => setPasswordVisible(!passwordVisible)} className={`absolute top-[45%] right-7 opacity-70 cursor-pointer`}>{passwordVisible ? <FaEye /> : <FaEyeSlash />}</span>
-                    <span onClick={() => setPasswordVisible(!passwordVisible)} className={`absolute top-[15%] right-7 opacity-70 cursor-pointer`}>{passwordVisible ? <FaEye /> : <FaEyeSlash />}</span>
+                    <span onClick={() => setPasswordVisible(!passwordVisible)} className={`absolute bottom-[63%] right-7 opacity-70 cursor-pointer`}>{passwordVisible ? <FaEye /> : <FaEyeSlash />}</span>
+                    <span onClick={() => setPasswordVisible(!passwordVisible)} className={`absolute top-[10%] right-7 opacity-70 cursor-pointer`}>{passwordVisible ? <FaEye /> : <FaEyeSlash />}</span>
 
-                    <input onChange={(e) => setPassword(e.target.value)} type={passwordVisible ? "text" : "password"} className={`w-full px-3 py-3 bg-gray-200 outline-none`} placeholder="Enter your email" />
+                    <input onChange={(e) => setPassword(e.target.value)} type={passwordVisible ? "text" : "password"} className={`w-full px-3 py-3 bg-gray-200 outline-none`} placeholder="Enter your password" />
                     <input onChange={(e) => setConfirm(e.target.value)} type={passwordVisible ? "text" : "password"} className={`w-full px-3 py-3 bg-gray-200 outline-none`} placeholder="Re enter your password" />
-                    <div onClick={changePassword} className={`w-full ${emailSent ? "pointer-events-none opacity-50" : ""} text-white py-3 font-semibold cursor-pointer active:opacity-75 duration-150 ease-in-out mt-3 bg-linear-to-br from-black to-[#960046] flex justify-center items-center gap-2`}>{loading ? (<>Finding... <Loader /></>) : ("Find Account")}</div>
+                    <div onClick={changePassword} className={`w-full ${verified ? "block" : "hidden"} text-white py-3 font-semibold cursor-pointer active:opacity-75 duration-150 ease-in-out mt-3 bg-linear-to-br from-black to-[#960046] flex justify-center items-center gap-2`}>{loading ? (<>Changing... <Loader /></>) : ("Change Password")}</div>
 
                     <div className="w-full text-sm space-y-1">
                         <p className={passwordValidation.uppercase ? "text-green-600" : "text-gray-500"}>

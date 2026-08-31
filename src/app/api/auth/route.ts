@@ -3,6 +3,7 @@ import { User } from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import * as jose from 'jose'
 
 export async function POST(req: NextRequest) {
 
@@ -59,14 +60,14 @@ export async function POST(req: NextRequest) {
                 }, { status: 404 });
             }
 
-            if(found.role === 'user' && !found.isVerified){
+            if (found.role === 'user' && !found.isVerified) {
                 return NextResponse.json({
                     success: false,
                     message: `Account not approved yet`,
                 }, { status: 401 });
             }
 
-            if(found.role !== option){
+            if (found.role !== option) {
                 return NextResponse.json({
                     success: false,
                     message: `Authorization error`,
@@ -106,5 +107,104 @@ export async function POST(req: NextRequest) {
                 message: `SOMETHING WENT WRONG`,
             }, { status: 500 });
         }
+    }
+}
+
+export async function GET(req: NextRequest) {
+
+    await connectDB();
+
+    const query = req.url.split("=")[1];
+
+    if (query === 'verify') {
+        try {
+            const token = req.cookies.get('token')?.value;
+            const payload = jose.decodeJwt(token as string);
+
+            const { email } = payload;
+
+            const found = await User.findOne({ email });
+
+            return NextResponse.json({
+                success: true,
+                message: `User Fetched`,
+                found
+            }, { status: 200 });
+        } catch (error) {
+            console.log("VERIFY ERROR", error);
+            return NextResponse.json({
+                success: false,
+                message: `SOMETHING WENT WRONG`,
+            }, { status: 500 });
+        }
+    }
+    else if (query === 'fetch') {
+
+        try {
+            const found = await User.find();
+
+            return NextResponse.json({
+                success: true,
+                message: `Pending requests fetched`,
+                found
+            }, { status: 200 });
+        } catch (error) {
+            console.log("PENDING REQUESTS ERROR", error);
+            return NextResponse.json({
+                success: false,
+                message: `SOMETHING WENT WRONG`,
+            }, { status: 500 });
+        }
+    }
+}
+
+export async function PUT(req: NextRequest) {
+    await connectDB();
+
+    const body = await req.json();
+    const { email } = body;
+
+    console.log(email)
+
+    try {
+        const found = await User.findOneAndUpdate({ email });
+
+        if (found) {
+            found.isVerified = true;
+            await found.save();
+
+            return NextResponse.json({
+                success: true,
+                message: `User Verified`,
+            }, { status: 300 });
+        }
+    } catch (error) {
+        console.log("APPROVE ERROR", error);
+        return NextResponse.json({
+            success: false,
+            message: `SOMETHING WENT WRONG`,
+        }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: NextRequest) {
+    await connectDB();
+
+    const email = req.url.split("=")[1];
+    console.log(email);
+
+    try {
+        const found = await User.findOneAndDelete({ email });
+
+        return NextResponse.json({
+            success: true,
+            message: `User deleted`,
+        }, { status: 200 });
+    } catch (error) {
+        console.log("DELETE ERROR", error);
+        return NextResponse.json({
+            success: false,
+            message: `SOMETHING WENT WRONG`,
+        }, { status: 500 });
     }
 }
