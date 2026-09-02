@@ -46,6 +46,40 @@ export async function POST(req: NextRequest) {
             }, { status: 500 });
         }
     }
+    else if (query === 'admin') {
+
+        const { name, email, password } = body;
+        try {
+
+            const found = await User.findOne({ email });
+
+            if (found) {
+                return NextResponse.json({
+                    success: false,
+                    message: `User already exists`,
+                }, { status: 401 });
+            }
+
+            const hashed = await bcrypt.hash(password, 10);
+
+            const newUser = new User({
+                name, email, password: hashed, isVerified: true, role: 'admin'
+            });
+
+            await newUser.save();
+
+            return NextResponse.json({
+                success: true,
+                message: `Admin created`,
+            }, { status: 201 });
+        } catch (error) {
+            console.log("AUTH ERROR", error);
+            return NextResponse.json({
+                success: false,
+                message: `SOMETHING WENT WRONG`,
+            }, { status: 500 });
+        }
+    }
     else if (query === 'login') {
 
         const { email, password, option } = body;
@@ -156,6 +190,29 @@ export async function GET(req: NextRequest) {
             }, { status: 500 });
         }
     }
+    else if (query === 'admins') {
+
+        try {
+            const found = await User.find({ role: 'admin' }).select('-password');
+
+            return NextResponse.json({
+                success: true,
+                message: `Admins fetched`,
+                found
+            }, { status: 200 });
+        } catch (error) {
+            console.log("ADMINS FETCH ERROR", error);
+            return NextResponse.json({
+                success: false,
+                message: `SOMETHING WENT WRONG`,
+            }, { status: 500 });
+        }
+    }
+
+    return NextResponse.json({
+        success: false,
+        message: `SOMETHING WENT WRONG`,
+    }, { status: 404 });
 }
 
 export async function PUT(req: NextRequest) {
@@ -190,8 +247,36 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
     await connectDB();
 
-    const email = req.url.split("=")[1];
-    console.log(email);
+    const url = new URL(req.url);
+    const query = url.searchParams.get('type');
+
+    if (query === 'delete-admin') {
+        const id = url.searchParams.get('id');
+
+        try {
+            const found = await User.findOneAndDelete({ _id: id, role: 'admin' });
+
+            if (!found) {
+                return NextResponse.json({
+                    success: false,
+                    message: `Admin not found`,
+                }, { status: 404 });
+            }
+
+            return NextResponse.json({
+                success: true,
+                message: `Admin deleted`,
+            }, { status: 200 });
+        } catch (error) {
+            console.log("ADMIN DELETE ERROR", error);
+            return NextResponse.json({
+                success: false,
+                message: `SOMETHING WENT WRONG`,
+            }, { status: 500 });
+        }
+    }
+
+    const email = url.searchParams.get('email');
 
     try {
         const found = await User.findOneAndDelete({ email });

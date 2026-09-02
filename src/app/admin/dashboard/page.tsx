@@ -20,11 +20,11 @@ function page() {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const res = await axios.get(`/api/auth`, {
+        const res = await axios.get(`/api/auth?type=verify`, {
           withCredentials: true
         });
 
-        console.log(res.data);
+        //console.log(res.data);
         setData(res.data.found);
       } catch (error: any) {
         console.log("ERROR", error);

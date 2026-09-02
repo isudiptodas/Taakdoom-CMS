@@ -40,6 +40,14 @@ function AdminNavbar() {
         {
             name: 'Approval',
             link: '/admin/approval'
+        },
+        {
+            name: 'Manage Admin',
+            link: '/admin/manage-admin'
+        },
+        {
+            name: 'Clients',
+            link: '/clients'
         }
     ];
 

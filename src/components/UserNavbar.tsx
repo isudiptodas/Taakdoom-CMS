@@ -36,6 +36,10 @@ function UserNavbar() {
             name: 'Work Log',
             link: '/work-log'
         },
+        {
+            name: 'Clients',
+            link: '/clients'
+        },
     ];
 
     return (

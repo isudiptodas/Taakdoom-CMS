@@ -20,7 +20,6 @@ interface pendingData {
   name: string;
   role: string;
   _id: string
-
 }
 
 function page() {

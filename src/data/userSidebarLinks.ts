@@ -1,7 +1,7 @@
 export const userSidebarLinks = [
     {
         name: "Dashboard",
-        link: `/admin/dashboard`
+        link: `/user/dashboard`
     },
     {
         name: "Work Log",
@@ -10,5 +10,9 @@ export const userSidebarLinks = [
     {
         name: "Jobs",
         link: `/jobs`
+    },
+    {
+        name: "Clients",
+        link: `/clients`
     },
 ]

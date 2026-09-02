@@ -4,7 +4,7 @@ import { userSidebarLinks } from "@/data/userSidebarLinks";
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-function AdminSidebar({ name }: { name: string }) {
+function UserSidebar({ name }: { name: string }) {
 
     const pathname = usePathname();
 
@@ -26,4 +26,4 @@ function AdminSidebar({ name }: { name: string }) {
     )
 }
 
-export default AdminSidebar
+export default UserSidebar
