@@ -28,7 +28,7 @@ function page() {
 
   const [data, setData] = useState<data>();
   const [allAdmin, setAllAdmin] = useState<adminData[]>([]);
-  const[adminVisible, setAdminVisible] = useState(false);
+  const [adminVisible, setAdminVisible] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<adminData>();
   const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -96,8 +96,8 @@ function page() {
             <p className={`w-[90%] pb-5 border-b-2 border-black pt-10 font-bold text-4xl`}>Manage Admin</p>
 
             <div className={`w-full mt-5 pl-5 lg:pl-10 xl:pl-14 flex flex-col justify-start items-start gap-4`}>
-                <p className={`w-full lg:w-auto text-start text-xl`}>Total Admin <span className={`font-bold`}>{allAdmin.length}</span></p>
-                <p onClick={() => setAdminVisible(!adminVisible)} className={`w-auto px-5 py-3 bg-black text-white active:opacity-75 duration-200 ease-in-out cursor-pointer flex justify-center items-center gap-2`}>Add new admin <TiUserAdd className="text-xl" /></p>
+              <p className={`w-full lg:w-auto text-start text-xl`}>Total Admin <span className={`font-bold`}>{allAdmin.length}</span></p>
+              <p onClick={() => setAdminVisible(!adminVisible)} className={`w-auto px-5 py-3 bg-black text-white active:opacity-75 duration-200 ease-in-out cursor-pointer flex justify-center items-center gap-2`}>Add new admin <TiUserAdd className="text-xl" /></p>
             </div>
 
             <div className={`w-[90%] md:w-[95%] xl:w-[90%] mt-5 h-auto flex flex-col justify-start items-center pt-2 pb-5`}>
@@ -147,8 +147,7 @@ function page() {
                   <div className="mt-6 flex justify-end gap-3">
                     <button
                       onClick={() => setSelectedAdmin(undefined)}
-                      className="bg-gray-200 cursor-pointer px-5 py-2 text-black"
-                    >
+                      className="bg-gray-200 cursor-pointer px-5 py-2 text-black">
                       No
                     </button>
                     <button

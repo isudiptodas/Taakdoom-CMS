@@ -29,8 +29,8 @@ function UserNavbar() {
             link: `/user/dashboard`
         },
         {
-            name: 'Jobs',
-            link: '/jobs'
+            name: 'delivery Jobs',
+            link: '/delivery-jobs'
         },
         {
             name: 'Work Log',

@@ -30,8 +30,8 @@ function AdminNavbar() {
             link: `/admin/dashboard`
         },
         {
-            name: 'Jobs',
-            link: '/jobs'
+            name: 'Delivery Jobs',
+            link: '/delivery-jobs'
         },
         {
             name: 'Work Log',

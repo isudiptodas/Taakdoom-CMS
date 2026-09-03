@@ -16,8 +16,8 @@ export const adminSidebarLinks = [
         link: `/work-log`
     },
     {
-        name: "Jobs",
-        link: `/jobs`
+        name: "Delivery Jobs",
+        link: `/delivery-jobs`
     },
     {
         name: "Clients",
