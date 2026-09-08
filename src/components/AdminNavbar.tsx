@@ -47,7 +47,7 @@ function AdminNavbar() {
         },
         {
             name: 'Clients',
-            link: '/clients'
+            link: '/admin/clients'
         }
     ];
 

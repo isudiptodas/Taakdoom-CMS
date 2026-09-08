@@ -21,6 +21,6 @@ export const adminSidebarLinks = [
     },
     {
         name: "Clients",
-        link: `/clients`
+        link: `/admin/clients`
     },
 ]

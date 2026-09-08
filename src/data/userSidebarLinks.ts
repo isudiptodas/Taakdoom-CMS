@@ -11,8 +11,4 @@ export const userSidebarLinks = [
         name: "Delivery Jobs",
         link: `/delivery-jobs`
     },
-    {
-        name: "Clients",
-        link: `/clients`
-    },
 ]

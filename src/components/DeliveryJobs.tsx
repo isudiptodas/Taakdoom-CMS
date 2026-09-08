@@ -1,30 +1,38 @@
 'use client'
 
 import axios from "axios"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { FiCalendar, FiCheck, FiX } from "react-icons/fi"
 import Loader from "@/components/Loader"
+import { members } from "@/data/members"
+import { clients } from "@/data/clients"
 
 export interface DeliveryJobFormData {
   jobName: string;
   uuid: string;
   clientName: string;
-  AssignTo: string;
+  AssignTo: string[];
   startTime: string;
   endTime: string;
   actualDeliveryDate: string;
   delay: string;
   status: string;
-  phoneNumber: string;
+  phoneNumber: string[];
   remarks: string;
   billingRaised: boolean;
   paymentReceived: boolean;
 }
 
+export interface DeliveryJob extends DeliveryJobFormData {
+  _id: string;
+}
+
 interface DeliveryJobsProps {
   setVisible: (visible: boolean) => void;
+  selectedJob?: DeliveryJob;
   onCreated?: () => void;
+  onUpdated?: () => void;
 }
 
 const statusOptions = [
@@ -39,23 +47,86 @@ const statusOptions = [
 ]
 
 const initialForm: DeliveryJobFormData = {
-  jobName: "", uuid: "", clientName: "", AssignTo: "", startTime: "", endTime: "",
-  actualDeliveryDate: "", delay: "", status: "", phoneNumber: "", remarks: "",
+  jobName: "", uuid: "", clientName: "", AssignTo: [], startTime: "", endTime: "",
+  actualDeliveryDate: "", delay: "", status: "", phoneNumber: [], remarks: "",
   billingRaised: false, paymentReceived: false,
 }
 
-function DeliveryJobs({ setVisible, onCreated }: DeliveryJobsProps) {
-  const [form, setForm] = useState<DeliveryJobFormData>(initialForm)
+function DeliveryJobs({ setVisible, selectedJob, onCreated, onUpdated }: DeliveryJobsProps) {
+  const [form, setForm] = useState<DeliveryJobFormData>(selectedJob ? { ...selectedJob, AssignTo: Array.isArray(selectedJob.AssignTo) ? selectedJob.AssignTo : [selectedJob.AssignTo] } : initialForm)
+  const [assignee, setAssignee] = useState("")
+  const [phoneNumbers, setPhoneNumbers] = useState(Array.isArray(selectedJob?.phoneNumber) ? selectedJob.phoneNumber.join(", ") : selectedJob?.phoneNumber || "")
+  const [memberVisible, setMemberVisible] = useState(false)
+  const [clientOptions, setClientOptions] = useState<string[]>(clients)
+  const [clientVisible, setClientVisible] = useState(false)
+  const [newClientVisible, setNewClientVisible] = useState(false)
+  const [newClient, setNewClient] = useState("")
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const savedClients = localStorage.getItem("deliveryClients")
+    if (savedClients) {
+      const savedClientTimer = window.setTimeout(() => {
+        setClientOptions([...clients, ...JSON.parse(savedClients).filter((client: string) => !clients.includes(client))])
+      }, 0)
+
+      return () => window.clearTimeout(savedClientTimer)
+    }
+  }, [])
 
   const updateField = (field: keyof DeliveryJobFormData, value: string | boolean) => {
     setForm((current) => ({ ...current, [field]: value }))
   }
 
+  const addAssignee = () => {
+    if (!assignee.trim() || form.AssignTo.includes(assignee.trim())) return;
+
+    setForm((current) => ({ ...current, AssignTo: [...current.AssignTo, assignee.trim()] }))
+    setAssignee("")
+  }
+
+  const selectMember = (name: string) => {
+    if (form.AssignTo.includes(name)) return;
+
+    setForm((current) => ({ ...current, AssignTo: [...current.AssignTo, name] }))
+    setMemberVisible(false)
+  }
+
+  const handleAssigneeKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      addAssignee()
+    }
+  }
+
+  const removeAssignee = (name: string) => {
+    setForm((current) => ({ ...current, AssignTo: current.AssignTo.filter((person) => person !== name) }))
+  }
+
+  const selectClient = (name: string) => {
+    updateField("clientName", name)
+    setClientVisible(false)
+  }
+
+  const addClient = () => {
+    const clientName = newClient.trim()
+    if (!clientName || clientOptions.includes(clientName)) return
+
+    const updatedClients = [...clientOptions, clientName]
+    setClientOptions(updatedClients)
+    localStorage.setItem("deliveryClients", JSON.stringify(updatedClients.filter((client) => !clients.includes(client))))
+    updateField("clientName", clientName)
+    setNewClient("")
+    setNewClientVisible(false)
+    setClientVisible(false)
+  }
+
   const createJob = async () => {
     if (loading) return;
 
-    if (!form.jobName.trim() || !form.uuid.trim() || !form.clientName.trim() || !form.AssignTo.trim() || !form.startTime || !form.endTime || !form.phoneNumber.trim()) {
+    const phoneNumberList = phoneNumbers.split(",").map((phone) => phone.trim()).filter(Boolean)
+
+    if (!form.jobName.trim() || !form.clientName.trim() || form.AssignTo.length === 0 || !form.startTime || !form.endTime || phoneNumberList.length === 0) {
       toast.error("Please complete all required fields")
       return
     }
@@ -63,13 +134,21 @@ function DeliveryJobs({ setVisible, onCreated }: DeliveryJobsProps) {
     setLoading(true)
 
     try {
-      const res = await axios.post("/api/jobs?type=create", form, { withCredentials: true })
+      const jobData = { ...form, phoneNumber: phoneNumberList }
+      const res = selectedJob
+        ? await axios.put(`/api/jobs?type=update&id=${selectedJob._id}`, jobData, { withCredentials: true })
+        : await axios.post("/api/jobs?type=create", jobData, { withCredentials: true })
 
-      if (res.status === 201) {
-        toast.success("Delivery job created")
-        onCreated?.()
+      if (res.status === 200 || res.status === 201) {
+        toast.success(selectedJob ? "Delivery job updated" : "Delivery job created")
+        if (selectedJob) {
+          onUpdated?.()
+        } else {
+          onCreated?.()
+        }
         setVisible(false)
         setForm(initialForm)
+        setPhoneNumbers("")
       }
     } catch (error: unknown) {
       const message = axios.isAxiosError(error) ? error.response?.data?.message : "Something went wrong"
@@ -86,16 +165,16 @@ function DeliveryJobs({ setVisible, onCreated }: DeliveryJobsProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6 backdrop-blur-[2px]">
       <div className="w-full max-w-3xl animate-[jobFormIn_220ms_ease-out] overflow-y-auto bg-white shadow-2xl max-h-[92vh]">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4 md:px-7">
-          <div><p className="text-xl font-bold text-gray-900">Assign new job</p><p className="mt-1 text-sm text-gray-500">Add the delivery details below.</p></div>
+          <div><p className="text-xl font-bold text-gray-900">{selectedJob ? "Edit delivery job" : "Assign new job"}</p><p className="mt-1 text-sm text-gray-500">{selectedJob ? "Update the delivery details below." : "Add the delivery details below."}</p></div>
           <div aria-label="Close form" onClick={() => setVisible(false)} className="cursor-pointer p-2 text-xl text-gray-500 transition hover:bg-gray-100 hover:text-black"><FiX /></div>
         </div>
 
         <div className="grid grid-cols-1 gap-5 p-5 md:grid-cols-2 md:p-7">
           <label className="text-sm font-semibold text-gray-700">Job name<input required value={form.jobName} onChange={(event) => updateField("jobName", event.target.value)} className={inputClass} placeholder="Website delivery" /></label>
-          <label className="text-sm font-semibold text-gray-700">Job ID / UUID<input required value={form.uuid} onChange={(event) => updateField("uuid", event.target.value)} className={inputClass} placeholder="JOB-001" /></label>
-          <label className="text-sm font-semibold text-gray-700">Client name<input required value={form.clientName} onChange={(event) => updateField("clientName", event.target.value)} className={inputClass} placeholder="Client name" /></label>
-          <label className="text-sm font-semibold text-gray-700">Assign to<input required value={form.AssignTo} onChange={(event) => updateField("AssignTo", event.target.value)} className={inputClass} placeholder="Team member" /></label>
-          <label className="text-sm font-semibold text-gray-700">Phone number<input required type="tel" value={form.phoneNumber} onChange={(event) => updateField("phoneNumber", event.target.value)} className={inputClass} placeholder="Phone number" /></label>
+          <label className="text-sm font-semibold text-gray-700">Job ID / UUID<input readOnly value={selectedJob ? form.uuid : "Generated automatically"} className={`${inputClass} cursor-not-allowed bg-gray-100 text-gray-500`} /></label>
+          <div className="relative text-sm font-semibold text-gray-700">Client name<div onClick={() => setClientVisible(!clientVisible)} className={`${inputClass} mt-1 cursor-pointer`}>{form.clientName || "Select client"}</div>{clientVisible && <div className="absolute left-0 top-full z-20 mt-1 w-full border border-gray-200 bg-white py-1 shadow-lg">{clientOptions.map((client) => <div key={client} onClick={() => selectClient(client)} className="cursor-pointer px-3 py-2 text-sm font-normal text-gray-700 hover:bg-gray-100">{client}</div>)}<div onClick={() => { setNewClientVisible(true); setClientVisible(false) }} className="border-t border-gray-200 px-3 py-2 text-sm font-semibold text-[#de0046] cursor-pointer hover:bg-gray-100">+ Add new client</div></div>}{newClientVisible && <div className="mt-2 flex gap-2"><input value={newClient} onChange={(event) => setNewClient(event.target.value)} className={inputClass} placeholder="New client name" /><div onClick={addClient} className="flex cursor-pointer items-center bg-black px-3 text-white">Add</div></div>}</div>
+          <div className="text-sm font-semibold text-gray-700">Assign to<div className="relative mt-1 flex gap-2"><input value={assignee} onFocus={() => setMemberVisible(true)} onChange={(event) => { setAssignee(event.target.value); setMemberVisible(true) }} onKeyDown={handleAssigneeKeyDown} className={inputClass} placeholder="Select team member" /><div onClick={addAssignee} className="flex cursor-pointer items-center bg-black px-4 text-white transition hover:bg-[#de0046]">Add</div>{memberVisible && <div className="absolute left-0 top-full z-10 mt-1 w-[calc(100%-60px)] border border-gray-200 bg-white py-1 shadow-lg">{members.filter((member) => !form.AssignTo.includes(member) && member.toLowerCase().includes(assignee.toLowerCase())).map((member) => <div key={member} onClick={() => selectMember(member)} className="cursor-pointer px-3 py-2 text-sm font-normal text-gray-700 hover:bg-gray-100">{member}</div>)}</div>}</div><div className="mt-2 flex flex-wrap gap-2">{form.AssignTo.map((person) => <div key={person} className="flex items-center gap-2 bg-gray-100 px-2.5 py-1.5 text-xs font-normal text-gray-700"><span>{person}</span><FiX onClick={() => removeAssignee(person)} className="cursor-pointer text-sm hover:text-red-600" /></div>)}</div></div>
+          <label className="text-sm font-semibold text-gray-700">Phone number<input required type="tel" value={phoneNumbers} onChange={(event) => setPhoneNumbers(event.target.value)} className={inputClass} placeholder="Phone numbers separated by comma" /></label>
           <label className="text-sm font-semibold text-gray-700">Delay<input value={form.delay} onChange={(event) => updateField("delay", event.target.value)} className={inputClass} placeholder="Optional delay note" /></label>
           <label className="text-sm font-semibold text-gray-700">Start date<div className="relative mt-1"><FiCalendar className="pointer-events-none absolute right-3 top-3 text-gray-500" /><input required type="date" value={form.startTime} onChange={(event) => updateField("startTime", event.target.value)} className={`${dateInputClass} pr-10`} /></div></label>
           <label className="text-sm font-semibold text-gray-700">End date<div className="relative mt-1"><FiCalendar className="pointer-events-none absolute right-3 top-3 text-gray-500" /><input required type="date" value={form.endTime} onChange={(event) => updateField("endTime", event.target.value)} className={`${dateInputClass} pr-10`} /></div></label>
@@ -103,7 +182,7 @@ function DeliveryJobs({ setVisible, onCreated }: DeliveryJobsProps) {
           <label className="text-sm font-semibold text-gray-700">Status<select value={form.status} onChange={(event) => updateField("status", event.target.value)} className={`${inputClass} mt-1 capitalize`}>{statusOptions.map((status) => <option key={status.name} value={status.value}>{status.name}</option>)}</select><span className="mt-1 flex items-center gap-2 text-xs font-normal text-gray-500"><span className={`h-2.5 w-2.5 rounded-full ${statusOptions.find((status) => status.value === form.status)?.color}`} />Selected status</span></label>
           <label className="text-sm font-semibold text-gray-700 md:col-span-2">Remarks<textarea value={form.remarks} onChange={(event) => updateField("remarks", event.target.value)} className={`${inputClass} min-h-24 resize-y`} placeholder="Additional notes" /></label>
           <div className="flex flex-wrap gap-5 text-sm font-semibold text-gray-700 md:col-span-2"><label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={form.billingRaised} onChange={(event) => updateField("billingRaised", event.target.checked)} className="h-4 w-4 accent-[#de0046]" />Billing raised</label><label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={form.paymentReceived} onChange={(event) => updateField("paymentReceived", event.target.checked)} className="h-4 w-4 accent-[#de0046]" />Payment received</label></div>
-          <div className="flex justify-end gap-3 border-t border-gray-200 pt-5 md:col-span-2"><div onClick={() => setVisible(false)} className="cursor-pointer border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-100">Cancel</div><p onClick={createJob} className="flex cursor-pointer items-center gap-2 bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#de0046]">{loading ? (<>Creating... <Loader /></>) : (<>Create job <FiCheck /></>)}</p></div>
+          <div className="flex justify-end gap-3 border-t border-gray-200 pt-5 md:col-span-2"><div onClick={() => setVisible(false)} className="cursor-pointer border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-100">Cancel</div><div onClick={createJob} className="flex cursor-pointer items-center gap-2 bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#de0046]">{loading ? (<>Saving... <Loader /></>) : (<>{selectedJob ? "Update job" : "Create job"} <FiCheck /></>)}</div></div>
         </div>
       </div>
     </div>

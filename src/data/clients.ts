@@ -1,0 +1,18 @@
+export const clients = [
+    "Crispana Restaurant",
+    "Active Acres",
+    "Shravan Jaria Jewellery",
+    "Bricks",
+    "Rainware",
+    "Mexi Cola",
+    "Ruchi Realty Santuary",
+    "Ruchi Realty Oscar",
+    "Ruchi Realty Oscar Palace",
+    "Ruchi Realty Lifescape",
+    "AC Central Company",
+    "Riveria",
+    "Arnidam Dream Design",
+    "Zedd",
+    "Taakdoom Internal",
+    "Drimi Agro",
+];
