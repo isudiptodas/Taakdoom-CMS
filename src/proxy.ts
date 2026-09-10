@@ -17,6 +17,9 @@ export function proxy(request: NextRequest) {
         else if (pathname.startsWith("/user") && role === "user") {
             return NextResponse.next();
         }
+        else if (pathname === '/work-log' || pathname === '/delivery-jobs') {
+            return NextResponse.next();
+        }
 
         return NextResponse.redirect(new URL('/', request.url))
     } catch (error) {
@@ -26,5 +29,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/user/:path*', '/admin/:path*']
+    matcher: ['/user/:path*', '/admin/:path*', '/work-log', '/delivery-jobs']
 }

@@ -23,6 +23,7 @@ interface jobType {
   AssignTo: string[] | string;
   startTime: string;
   endTime: string;
+  plannedDeliveryDate: string;
   actualDeliveryDate: string;
   delay: string;
   status: string;
@@ -44,24 +45,27 @@ const statusDotColors: { [key: string]: string } = {
   "": "bg-gray-300",
 }
 
-const statusDotTextColors: { [key: string]: string } = {
-  pending: "text-yellow-400",
-  hold: "text-purple-500",
-}
-
 const formatDate = (date: string) => {
   if (!date) return ""
 
-  const [year, month, day] = date.split("-")
+  const [year, month, day] = date.split("T")[0].split("-")
   return `${day}-${month}-${year}`
+}
+
+const formatDateTime = (date: string) => {
+  if (!date) return ""
+
+  const [datePart, timePart] = date.split("T")
+  const formattedDate = formatDate(datePart)
+  return timePart ? `${formattedDate} ${timePart}` : formattedDate
 }
 
 const getDelay = (job: jobType) => {
   if (!job.endTime) return ""
 
-  const endDate = new Date(`${job.endTime}T00:00:00`)
+  const endDate = new Date(job.endTime.includes("T") ? job.endTime : `${job.endTime}T00:00:00`)
   const lastDate = job.status === "completed" && job.actualDeliveryDate
-    ? new Date(`${job.actualDeliveryDate}T00:00:00`)
+    ? new Date(job.actualDeliveryDate.includes("T") ? job.actualDeliveryDate : `${job.actualDeliveryDate}T00:00:00`)
     : new Date()
 
   if (lastDate <= endDate) return ""
@@ -146,9 +150,9 @@ function Page() {
                 <p className="py-10 text-sm text-gray-500">No delivery jobs yet.</p>
               ) : (
                 <div className="w-full overflow-x-auto border border-gray-200">
-                  <table className="w-full min-w-[1800px] text-left">
-                    <thead className="bg-gray-100"><tr><th className="px-8 py-3 text-sm">Job ID</th><th className="px-4 py-3 text-sm">Job Name</th><th className="px-4 py-3 text-sm">Client Name</th><th className="px-4 py-3 text-sm">Assigned To</th><th className="px-4 py-3 text-sm">Phone Number</th><th className="px-4 py-3 text-sm">Start Date</th><th className="px-4 py-3 text-sm">End Date</th><th className="px-4 py-3 text-sm">Actual Delivery Date</th><th className="px-4 py-3 text-sm">Delay</th><th className="px-4 py-3 text-sm">Status</th><th className="px-4 py-3 text-sm">Remarks</th><th className="px-4 py-3 text-sm">Billing Raised</th><th className="px-4 py-3 text-sm">Payment Received</th><th className="px-4 py-3 text-sm">Action</th></tr></thead>
-                    <tbody>{allJobs.map((job) => <tr key={job._id || job.uuid} className="border-t border-gray-200 text-sm"><td className="pl-7 py-3 font-semibold">{job.uuid}</td><td className="px-4 py-3">{job.jobName}</td><td className="px-4 py-3">{job.clientName}</td><td className="px-4 py-3">{Array.isArray(job.AssignTo) ? job.AssignTo.join(", ") : job.AssignTo}</td><td className="px-4 py-3">{Array.isArray(job.phoneNumber) ? job.phoneNumber.join(", ") : job.phoneNumber}</td><td className="px-4 py-3">{formatDate(job.startTime)}</td><td className="px-4 py-3">{formatDate(job.endTime)}</td><td className="px-4 py-3">{formatDate(job.actualDeliveryDate)}</td><td className={`px-4 py-3 ${getDelay(job) ? "font-semibold text-red-600" : ""}`}>{getDelay(job)}</td><td className="px-4 py-3"><div className="flex items-center gap-2 capitalize"><span className={`relative flex h-3.5 w-3.5 items-center justify-center ${statusDotTextColors[job.status] || "text-gray-300"}`}><span className={`absolute h-2 w-2 rounded-full ${statusDotColors[job.status] || "bg-gray-300"} ${(job.status === "pending" || job.status === "hold") ? "animate-[statusCenter_1.4s_ease-in-out_infinite]" : ""}`} />{(job.status === "pending" || job.status === "hold") && <span className="absolute h-2 w-2 rounded-full border border-current animate-[statusRipple_1.4s_ease-out_infinite]" />}</span>{job.status}</div></td><td className="px-4 py-3">{job.remarks}</td><td className="px-4 py-3">{job.billingRaised ? "Yes" : "No"}</td><td className="px-4 py-3">{job.paymentReceived ? "Yes" : "No"}</td><td className="px-4 py-3"><div onClick={() => { setSelectedJob({ ...job, _id: job._id, AssignTo: Array.isArray(job.AssignTo) ? job.AssignTo : [job.AssignTo], phoneNumber: Array.isArray(job.phoneNumber) ? job.phoneNumber : [job.phoneNumber] }); setJobVisible(true); }} className="cursor-pointer font-semibold text-[#de0046] hover:underline">Edit</div></td></tr>)}</tbody>
+                  <table className="w-full min-w-[2500px] text-left">
+                    <thead className="bg-gray-100"><tr><th className="px-8 py-3 text-sm">Job ID</th><th className="px-4 py-3 text-sm">Job Name</th><th className="px-4 py-3 text-sm">Client Name</th><th className="px-4 py-3 text-sm">Assigned To</th><th className="px-4 py-3 text-sm">Phone Number</th><th className="px-4 py-3 text-sm">Start Date & Time</th><th className="px-4 py-3 text-sm">End Date & Time</th><th className="px-4 py-3 text-sm">Planned Delivery Date</th><th className="px-4 py-3 text-sm">Actual Delivery Date</th><th className="px-4 py-3 text-sm">Delay</th><th className="px-4 py-3 text-sm">Status</th><th className="px-4 py-3 text-sm">Remarks</th><th className="px-4 py-3 text-sm">Billing Raised</th><th className="px-4 py-3 text-sm">Payment Received</th><th className="px-4 py-3 text-sm">Action</th></tr></thead>
+                    <tbody>{allJobs.map((job) => { const statusColor = statusDotColors[job.status] || "bg-gray-300"; return <tr key={job._id || job.uuid} className="border-t border-gray-200 text-sm"><td className="pl-7 py-3 font-semibold">{job.uuid}</td><td className="px-4 py-3">{job.jobName}</td><td className="px-4 py-3">{job.clientName}</td><td className="px-4 py-3">{Array.isArray(job.AssignTo) ? job.AssignTo.join(", ") : job.AssignTo}</td><td className="px-4 py-3">{Array.isArray(job.phoneNumber) ? job.phoneNumber.join(", ") : job.phoneNumber}</td><td className="px-4 py-3">{formatDateTime(job.startTime)}</td><td className="px-4 py-3">{formatDateTime(job.endTime)}</td><td className="px-4 py-3">{formatDate(job.plannedDeliveryDate)}</td><td className="px-4 py-3">{formatDate(job.actualDeliveryDate)}</td><td className={`px-4 py-3 ${getDelay(job) ? "font-semibold text-red-600" : ""}`}>{getDelay(job)}</td><td className="px-4 py-3"><div className={`inline-flex items-center gap-2 px-2.5 py-2 text-xs font-semibold capitalize ${statusColor} text-center bg-opacity-50`}><span className={` rounded-full ${statusColor}`} />{job.status || "----"}</div></td><td className="px-4 py-3">{job.remarks}</td><td className="px-4 py-3">{job.billingRaised ? "Yes" : "No"}</td><td className="px-4 py-3">{job.paymentReceived ? "Yes" : "No"}</td><td className="px-4 py-3"><div onClick={() => { setSelectedJob({ ...job, _id: job._id, AssignTo: Array.isArray(job.AssignTo) ? job.AssignTo : [job.AssignTo], phoneNumber: Array.isArray(job.phoneNumber) ? job.phoneNumber : [job.phoneNumber] }); setJobVisible(true); }} className="cursor-pointer font-semibold text-[#de0046] hover:underline">Edit</div></td></tr> })}</tbody>
                   </table>
                 </div>
               )}

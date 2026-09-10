@@ -15,6 +15,7 @@ export interface DeliveryJobFormData {
   AssignTo: string[];
   startTime: string;
   endTime: string;
+  plannedDeliveryDate: string;
   actualDeliveryDate: string;
   delay: string;
   status: string;
@@ -47,7 +48,7 @@ const statusOptions = [
 ]
 
 const initialForm: DeliveryJobFormData = {
-  jobName: "", uuid: "", clientName: "", AssignTo: [], startTime: "", endTime: "",
+  jobName: "", uuid: "", clientName: "", AssignTo: [], startTime: "", endTime: "", plannedDeliveryDate: "",
   actualDeliveryDate: "", delay: "", status: "", phoneNumber: [], remarks: "",
   billingRaised: false, paymentReceived: false,
 }
@@ -160,6 +161,7 @@ function DeliveryJobs({ setVisible, selectedJob, onCreated, onUpdated }: Deliver
 
   const inputClass = "w-full border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition duration-200 focus:border-[#de0046] focus:ring-2 focus:ring-[#de0046]/15"
   const dateInputClass = `${inputClass} [color-scheme:light] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-70`
+  const selectedStatus = statusOptions.find((status) => status.value === form.status)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6 backdrop-blur-[2px]">
@@ -176,10 +178,11 @@ function DeliveryJobs({ setVisible, selectedJob, onCreated, onUpdated }: Deliver
           <div className="text-sm font-semibold text-gray-700">Assign to<div className="relative mt-1 flex gap-2"><input value={assignee} onFocus={() => setMemberVisible(true)} onChange={(event) => { setAssignee(event.target.value); setMemberVisible(true) }} onKeyDown={handleAssigneeKeyDown} className={inputClass} placeholder="Select team member" /><div onClick={addAssignee} className="flex cursor-pointer items-center bg-black px-4 text-white transition hover:bg-[#de0046]">Add</div>{memberVisible && <div className="absolute left-0 top-full z-10 mt-1 w-[calc(100%-60px)] border border-gray-200 bg-white py-1 shadow-lg">{members.filter((member) => !form.AssignTo.includes(member) && member.toLowerCase().includes(assignee.toLowerCase())).map((member) => <div key={member} onClick={() => selectMember(member)} className="cursor-pointer px-3 py-2 text-sm font-normal text-gray-700 hover:bg-gray-100">{member}</div>)}</div>}</div><div className="mt-2 flex flex-wrap gap-2">{form.AssignTo.map((person) => <div key={person} className="flex items-center gap-2 bg-gray-100 px-2.5 py-1.5 text-xs font-normal text-gray-700"><span>{person}</span><FiX onClick={() => removeAssignee(person)} className="cursor-pointer text-sm hover:text-red-600" /></div>)}</div></div>
           <label className="text-sm font-semibold text-gray-700">Phone number<input required type="tel" value={phoneNumbers} onChange={(event) => setPhoneNumbers(event.target.value)} className={inputClass} placeholder="Phone numbers separated by comma" /></label>
           <label className="text-sm font-semibold text-gray-700">Delay<input value={form.delay} onChange={(event) => updateField("delay", event.target.value)} className={inputClass} placeholder="Optional delay note" /></label>
-          <label className="text-sm font-semibold text-gray-700">Start date<div className="relative mt-1"><FiCalendar className="pointer-events-none absolute right-3 top-3 text-gray-500" /><input required type="date" value={form.startTime} onChange={(event) => updateField("startTime", event.target.value)} className={`${dateInputClass} pr-10`} /></div></label>
-          <label className="text-sm font-semibold text-gray-700">End date<div className="relative mt-1"><FiCalendar className="pointer-events-none absolute right-3 top-3 text-gray-500" /><input required type="date" value={form.endTime} onChange={(event) => updateField("endTime", event.target.value)} className={`${dateInputClass} pr-10`} /></div></label>
+          <label className="text-sm font-semibold text-gray-700">Start date & time<div className="relative mt-1"><FiCalendar className="pointer-events-none absolute right-3 top-3 text-gray-500" /><input required type="datetime-local" value={form.startTime} onChange={(event) => updateField("startTime", event.target.value)} className={`${dateInputClass} pr-10`} /></div></label>
+          <label className="text-sm font-semibold text-gray-700">End date & time<div className="relative mt-1"><FiCalendar className="pointer-events-none absolute right-3 top-3 text-gray-500" /><input required type="datetime-local" value={form.endTime} onChange={(event) => updateField("endTime", event.target.value)} className={`${dateInputClass} pr-10`} /></div></label>
+          <label className="text-sm font-semibold text-gray-700">Planned delivery date<div className="relative mt-1"><FiCalendar className="pointer-events-none absolute right-3 top-3 text-gray-500" /><input type="date" value={form.plannedDeliveryDate} onChange={(event) => updateField("plannedDeliveryDate", event.target.value)} className={`${dateInputClass} pr-10`} /></div></label>
           <label className="text-sm font-semibold text-gray-700">Actual delivery date<div className="relative mt-1"><FiCalendar className="pointer-events-none absolute right-3 top-3 text-gray-500" /><input type="date" value={form.actualDeliveryDate} onChange={(event) => updateField("actualDeliveryDate", event.target.value)} className={`${dateInputClass} pr-10`} /></div></label>
-          <label className="text-sm font-semibold text-gray-700">Status<select value={form.status} onChange={(event) => updateField("status", event.target.value)} className={`${inputClass} mt-1 capitalize`}>{statusOptions.map((status) => <option key={status.name} value={status.value}>{status.name}</option>)}</select><span className="mt-1 flex items-center gap-2 text-xs font-normal text-gray-500"><span className={`h-2.5 w-2.5 rounded-full ${statusOptions.find((status) => status.value === form.status)?.color}`} />Selected status</span></label>
+          <label className="text-sm font-semibold text-gray-700">Status<select value={form.status} onChange={(event) => updateField("status", event.target.value)} className={`${inputClass} mt-1 capitalize`}>{statusOptions.map((status) => <option key={status.name} value={status.value}>{status.name}</option>)}</select><span className={`mt-2 inline-flex items-center gap-2 px-2.5 py-1 text-xs font-semibold capitalize ${selectedStatus?.color || "bg-gray-300"} bg-opacity-50`}><span className={`h-2 w-2 rounded-full ${selectedStatus?.color || "bg-gray-300"}`} />{selectedStatus?.name || "----"}</span></label>
           <label className="text-sm font-semibold text-gray-700 md:col-span-2">Remarks<textarea value={form.remarks} onChange={(event) => updateField("remarks", event.target.value)} className={`${inputClass} min-h-24 resize-y`} placeholder="Additional notes" /></label>
           <div className="flex flex-wrap gap-5 text-sm font-semibold text-gray-700 md:col-span-2"><label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={form.billingRaised} onChange={(event) => updateField("billingRaised", event.target.checked)} className="h-4 w-4 accent-[#de0046]" />Billing raised</label><label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={form.paymentReceived} onChange={(event) => updateField("paymentReceived", event.target.checked)} className="h-4 w-4 accent-[#de0046]" />Payment received</label></div>
           <div className="flex justify-end gap-3 border-t border-gray-200 pt-5 md:col-span-2"><div onClick={() => setVisible(false)} className="cursor-pointer border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-100">Cancel</div><div onClick={createJob} className="flex cursor-pointer items-center gap-2 bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#de0046]">{loading ? (<>Saving... <Loader /></>) : (<>{selectedJob ? "Update job" : "Create job"} <FiCheck /></>)}</div></div>
